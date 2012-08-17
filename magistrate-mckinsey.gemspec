@@ -2,12 +2,12 @@ $:.unshift File.expand_path("../lib", __FILE__)
 require "magistrate/version"
 
 Gem::Specification.new do |gem|
-  gem.name     = "magistrate"
+  gem.name     = "magistrate-mckinsey"
   gem.version  = Magistrate::VERSION
 
-  gem.author   = "Drew Blas"
-  gem.email    = "drew.blas@gmail.com"
-  gem.homepage = "http://github.com/drewblas/magistrate"
+  gem.author   = "Drew Blas, Jake Varghese"
+  gem.email    = "drew.blas@gmail.com, jake_varghese@external.mckinsey.com"
+  gem.homepage = "http://githuben.intranet.mckinsey.com/DigitalStrategy/magistrate"
   gem.summary  = "Cluster-based process / worker manager"
 
   gem.description = gem.summary

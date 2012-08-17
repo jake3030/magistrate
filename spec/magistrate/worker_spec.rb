@@ -2,6 +2,61 @@ require "spec_helper"
 require "magistrate/worker"
 
 describe "Magistrate::Worker" do
+  describe "integration tests" do
+    before(:each) do
+      #      Dir.glob('spec/tmp/pids/*').each do |f|
+      #        File.delete(f)
+      #      end
+      @worker = Magistrate::Worker.new(
+      'rake_like_worker',
+      :daemonize => true,
+      :start_cmd => 'ruby spec/resources/rake_like_worker.rb',
+      :pid_path => 'spec/tmp/pids',
+      :working_dir => "spec/tmp",
+      :debug => true
+      )
+      
+      @worker2 = Magistrate::Worker.new(
+      'rake_task',
+      :daemonize => true,
+      :start_cmd => 'rake -f spec/resources/rake_task.rake worker:test',
+      :pid_path => 'spec/tmp/pids',
+      :working_dir => "spec/tmp",
+      :debug => true
+      )
+    end
+
+    describe "extra processes command check" do
+      it "should find extra processes associated with master process" do
+        cmd = @worker.start_cmd
+        Kernel.fork do
+          `#{cmd}`
+        end
+        the_pid = @worker.find_pid_for_current_command
+        the_pid.should_not be_blank
+        @worker.is_rake_cmd?.should be_false
+        sleep(1)
+        Process.kill("KILL", the_pid)
+        
+      end
+    end
+    
+    describe "extra rake processes check" do
+      it "should find extra rake processes associated with master process" do
+        cmd = @worker2.start_cmd
+        Kernel.fork do
+          `#{cmd}`
+        end
+        the_pid = @worker2.find_pid_for_current_command
+        the_pid.should_not be_blank
+        @worker2.is_rake_cmd?.should be_true
+        sleep(1)
+        Process.kill("KILL", the_pid)
+        
+      end
+    end
+  end
+
   describe 'Rake-Like Worker' do
     around(:each) do |example|
       FakeFS.activate!
@@ -24,7 +79,8 @@ describe "Magistrate::Worker" do
         raise "Unexpected spawn call made...you don't want your specs actually spawning stuff, right?"
       end
     end
-  
+    
+   
     describe 'state' do
       it 'should be unmonitored by default' do
         @worker.state.should == :unmonitored
