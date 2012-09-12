@@ -41,7 +41,7 @@ module Magistrate
       Worker.mkdir_log_dirs(@working_dir) unless fakefs_active?
       clear_log
     end
-    
+
     def fakefs_active?
       Object.constants.include?("FakeFS") && Dir == FakeFS::Dir
     end
@@ -127,7 +127,7 @@ module Magistrate
           log "Restart: Stopping, then Starting, then reporting new target_state of :running"
           stop
           start
-        when :running then 
+        when :running then
           start
           @bounces += 1
         when :stopped then stop
@@ -155,24 +155,25 @@ module Magistrate
     def stop
       if @daemonize
         log "stopping daemon: #{name}"
+        kill_extra_processes!
         signal(@stop_signal, pid)
 
         # Poll to see if it's dead
         @stop_timeout.times do
           begin
+            kill_extra_processes!
             ::Process.kill(0, pid)
           rescue Errno::ESRCH
             # It died. Good.
-            kill_extra_processes!
             log "Process stopped"
             return
           end
 
           sleep 1
         end
-
-        signal('KILL', pid)
         kill_extra_processes!
+        signal('KILL', pid)
+
         log "Still alive after #{@stop_timeout}s; sent SIGKILL"
       else
         single_fork(@stop_cmd)
@@ -181,12 +182,11 @@ module Magistrate
     end
 
     def kill_extra_processes!
-      kill_extra_rake_tasks! if is_rake_cmd?
-      kill_other_processes! unless is_rake_cmd?
+      kill_other_processes!
     end
 
     def kill_other_processes!
-      pids = find_pid_for_current_command
+      pids = find_pids_for_current_command
       return false if pids.nil?
       begin
         log "killing extra processes: PID #{pids}"
@@ -200,38 +200,17 @@ module Magistrate
       end
     end
 
-    def find_pid_for_current_command
-      out = `ps ax`.split("\n").select {|n| n =~ /#{cmd_matcher}/}.first
-      log "find_pid_for_current_command: #{out}"
+    def find_pids_for_current_command
+      out = `ps -o user,pid,ppid,command -ax`.split("\n").select {|n| n =~ /#{pid}/}[1]
+      log "find_pids_for_current_command - current pid: #{pid}"
+      log "find_pids_for_current_command: #{out}"
       return nil if out.nil? || out.empty?
-      out.split(" ").first.to_i
+      out.split(" ")[1].to_i
     end
 
     def cmd_matcher
       cleand =  start_cmd.gsub("bundle exec", "").strip.split(">").map(&:strip)
       cleand.first
-    end
-
-    def kill_extra_rake_tasks!
-      return false unless is_rake_cmd?
-      pids = find_pid_for_rake_tasks
-      begin
-        log "killing extra rake task: PID #{pids}"
-        ::Process.kill("KILL", pids) unless pids.nil?
-        log "extra rake task killed: PID #{pids}"
-        return
-      rescue Errno::ESRCH
-        # not found
-        log "extra rake task not found to kill"
-        return
-      end
-    end
-
-    def find_pid_for_rake_tasks
-      out = `ps ax`.split("\n").select {|n| n =~ /#{rake_matcher}/}.first
-      log "find_pid_for_rake_tasks: #{out}"
-      return nil if out.nil? || out.empty?
-      out.split(" ").first.to_i
     end
 
     # single fork self-daemonizing processes
@@ -298,15 +277,15 @@ module Magistrate
         STDERR.reopen STDOUT
 
         # if self.log_cmd
-        #         STDOUT.reopen IO.popen(self.log_cmd, "a") 
+        #         STDOUT.reopen IO.popen(self.log_cmd, "a")
         #       else
-        #         STDOUT.reopen file_in_chroot(self.log), "a"        
+        #         STDOUT.reopen file_in_chroot(self.log), "a"
         #       end
-        #       
+        #
         #       if err_log_cmd
-        #         STDERR.reopen IO.popen(err_log_cmd, "a") 
+        #         STDERR.reopen IO.popen(err_log_cmd, "a")
         #       elsif err_log && (log_cmd || err_log != log)
-        #         STDERR.reopen file_in_chroot(err_log), "a"        
+        #         STDERR.reopen file_in_chroot(err_log), "a"
         #       else
         #         STDERR.reopen STDOUT
         #       end

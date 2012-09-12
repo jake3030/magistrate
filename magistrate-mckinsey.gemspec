@@ -14,7 +14,7 @@ Gem::Specification.new do |gem|
 
   gem.files = Dir["**/*"].select { |d| d =~ %r{^(README|bin/|lib/|spec/)} }
   #gem.files << "man/magistrate.1"
-  
+
   gem.executables << 'magistrate'
 
   gem.add_runtime_dependency 'json'
@@ -24,5 +24,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency 'rcov',   '~> 0.9.8'
   gem.add_development_dependency 'rr',     '~> 1.0.2'
   gem.add_development_dependency 'rspec',  '~> 2.6.0'
+  gem.add_development_dependency 'ruby-debug'
   gem.add_development_dependency "webmock", "~> 1.6.4"
 end
