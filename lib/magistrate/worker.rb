@@ -201,11 +201,16 @@ module Magistrate
     end
 
     def find_pids_for_current_command
-      out = `ps -o user,pid,ppid,command -ax`.split("\n").select {|n| n =~ /#{pid}/}[1]
+      out_arr = `ps -o user,pid,ppid,command -ax`.split("\n").select {|n| n =~ /#{pid}/}
+      out = find_proper_process(out_arr)
       log "find_pids_for_current_command - current pid: #{pid}"
-      log "find_pids_for_current_command: #{out}"
+      log "find_pids_for_current_command: #{out.inspect}"
       return nil if out.nil? || out.empty?
-      out.split(" ")[1].to_i
+      out[1].to_i
+    end
+
+    def find_proper_process(out_arr)
+      out_arr.map { |e| e.split(" ") }.select {|arr| arr[2] == pid.to_s}.first
     end
 
     def cmd_matcher
