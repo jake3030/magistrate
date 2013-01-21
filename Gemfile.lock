@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    magistrate-mckinsey (0.5.3)
+    magistrate (0.5.4)
       json
 
 GEM
@@ -13,7 +13,7 @@ GEM
     diff-lcs (1.1.2)
     fakefs (0.2.1)
     hpricot (0.8.2)
-    json (1.7.4)
+    json (1.7.5)
     linecache (0.46)
       rbx-require-relative (> 0.0.4)
     mustache (0.11.2)
@@ -48,7 +48,7 @@ PLATFORMS
 
 DEPENDENCIES
   fakefs (~> 0.2.1)
-  magistrate-mckinsey!
+  magistrate!
   rake
   rcov (~> 0.9.8)
   ronn
